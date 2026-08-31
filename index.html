@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#14161B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icone-192.png">
+<title>Road to 8A</title>
+<style>
+:root{
+  --nuit:#14161B; --nuit-2:#1B1F27; --nuit-3:#242933;
+  --craie:#EDE8DF; --faible:#8D9099;
+  --bois:#C08B4E; --repos:#5B8C9B; --pret:#B0A99C; --stop:#D8613C; --ok:#6E9E6B; --ligne:#2C313C;
+  --d:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --m:ui-monospace,"SF Mono",SFMono-Regular,"Roboto Mono",Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none;user-select:none}
+input{-webkit-user-select:text;user-select:text}
+html,body{height:100%;overflow:hidden}
+body{background:var(--nuit);color:var(--craie);font-family:var(--d);font-size:16px;
+  line-height:1.45;overscroll-behavior:none}
+:focus-visible{outline:2px solid var(--bois);outline-offset:3px}
+.ecran{position:fixed;inset:0;display:none;flex-direction:column;
+  padding:calc(env(safe-area-inset-top) + 20px) 22px calc(env(safe-area-inset-bottom) + 22px);
+  overflow-y:auto}
+.ecran.on{display:flex}
+.max{width:100%;max-width:520px;margin:0 auto}
+
+.sur{font-family:var(--m);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--faible)}
+h1{font-size:32px;font-weight:800;letter-spacing:-.03em;line-height:1.04;margin:8px 0 6px}
+.sous{font-size:15px;color:var(--faible)}
+
+/* accueil */
+.carte{background:var(--nuit-2);border:1px solid var(--ligne);border-radius:16px;padding:20px;margin-top:20px}
+.carte.vif{border-color:var(--bois)}
+.kv{display:flex;justify-content:space-between;align-items:baseline;padding:12px 0;border-top:1px solid var(--ligne)}
+.kv:first-child{border-top:0;padding-top:0}
+.kv .k{font-size:14px;color:var(--faible)}
+.kv .v{font-family:var(--m);font-size:16px;font-variant-numeric:tabular-nums}
+.kv .v.gros{font-size:22px;font-weight:600;color:var(--bois)}
+.grille{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-top:16px}
+.sem{aspect-ratio:1;border:0;cursor:pointer;border-radius:7px;background:var(--nuit-3);display:flex;align-items:center;
+  justify-content:center;font-family:var(--m);font-size:12px;color:var(--faible)}
+.sem[data-e="fait"]{background:var(--bois);color:#1A1206}
+.sem[data-e="cours"]{background:transparent;border:1.5px solid var(--bois);color:var(--bois)}
+.sem[data-e="deload"]{background:var(--nuit-3);color:var(--repos);border:1px dashed var(--repos)}
+.sem[data-e="test"]{background:var(--nuit-3);color:var(--stop);border:1px solid var(--stop)}
+
+button{font-family:var(--d);cursor:pointer;border:0}
+.b1{width:100%;padding:20px;border-radius:14px;background:var(--craie);color:var(--nuit);
+  font-size:17px;font-weight:700;margin-top:20px}
+.b2{width:100%;padding:15px;border-radius:12px;background:none;border:1px solid var(--ligne);
+  color:var(--faible);font-size:14px;margin-top:10px}
+.liens{display:flex;gap:22px;justify-content:center;margin-top:22px}
+.liens button{background:none;color:var(--faible);font-family:var(--m);font-size:11px;
+  letter-spacing:.16em;text-transform:uppercase;text-decoration:underline;text-underline-offset:4px}
+
+/* séance */
+#seance{justify-content:space-between}
+.tete-s{display:flex;justify-content:space-between;align-items:baseline}
+.jauge{height:3px;background:var(--ligne);border-radius:2px;margin-top:14px;overflow:hidden}
+.jauge i{display:block;height:100%;width:0;background:var(--bois)}
+.centre{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  text-align:center;padding:14px 0}
+.bloc-nom{font-family:var(--m);font-size:11px;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--faible);margin-bottom:14px}
+#seance[data-k="effort"] .bloc-nom{color:var(--bois)}
+#seance[data-k="repos"] .bloc-nom{color:var(--repos)}
+#seance[data-k="pret"] .bloc-nom{color:var(--pret)}
+.exo{font-size:29px;font-weight:700;letter-spacing:-.025em;line-height:1.15;margin-bottom:6px}
+.detail{font-size:15px;color:var(--faible);margin-bottom:22px;min-height:22px}
+.chrono{font-family:var(--m);font-size:96px;font-weight:600;letter-spacing:-.055em;line-height:1;
+  font-variant-numeric:tabular-nums}
+#seance[data-k="effort"] .chrono{color:var(--bois)}
+#seance[data-k="repos"] .chrono{color:var(--repos)}
+.suite{font-size:13px;color:var(--faible);margin-top:22px;min-height:20px}
+.suite b{color:var(--craie);font-weight:600}
+.cmd{display:flex;gap:10px}
+.cmd button{flex:1;padding:18px 0;border-radius:13px;background:var(--nuit-3);color:var(--craie);
+  font-size:15px;font-weight:600;border:1px solid var(--ligne)}
+.cmd .p{flex:2;background:var(--craie);color:var(--nuit);border-color:var(--craie)}
+.duo{display:flex;gap:11px;width:100%;margin-top:8px}
+.duo button{flex:1;padding:20px 8px;border-radius:13px;font-size:16px;font-weight:700}
+.oui{background:var(--ok);color:#0C140B}
+.non{background:var(--nuit-3);color:var(--craie);border:1px solid var(--ligne)}
+
+/* fin */
+.champ{margin-top:18px}
+.champ label{display:block;font-size:14px;font-weight:600;margin-bottom:8px}
+.champ .aide{font-size:12px;color:var(--faible);margin-bottom:9px;line-height:1.4}
+.cin{display:flex;align-items:center;gap:11px}
+.cin input{flex:1;background:var(--nuit);border:1px solid var(--ligne);border-radius:11px;
+  padding:16px;color:var(--craie);font-family:var(--m);font-size:24px;text-align:center;
+  font-variant-numeric:tabular-nums;min-width:0}
+.cin .u{font-family:var(--m);font-size:15px;color:var(--faible);width:32px}
+.note{margin-top:18px;padding:14px 16px;border-left:2px solid var(--bois);background:var(--nuit-2);
+  border-radius:0 11px 11px 0;font-size:14px;color:#C9C3B8}
+.note.stop{border-left-color:var(--stop)}
+.note b{color:var(--craie)}
+table{width:100%;border-collapse:collapse;margin-top:6px}
+th{font-family:var(--m);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faible);
+  text-align:left;padding:0 0 9px;font-weight:400}
+th:last-child,td:last-child{text-align:right}
+td{padding:11px 0;border-top:1px solid var(--ligne);font-family:var(--m);font-size:13px;
+  font-variant-numeric:tabular-nums}
+tr[data-r="1"] td:last-child{color:var(--ok)}
+tr[data-r="0"] td:last-child{color:var(--stop)}
+.pied{text-align:center;font-size:12px;color:var(--faible);opacity:.5;padding-top:22px;line-height:1.6}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-height:680px){ .chrono{font-size:76px} .exo{font-size:25px} h1{font-size:27px} }
+</style>
+</head>
+<body>
+
+<section class="ecran on" id="e-accueil"><div class="max" id="c-accueil"></div></section>
+<section class="ecran" id="seance" data-k="pret">
+  <div class="max" style="width:100%">
+    <div class="tete-s"><span class="sur" id="s-bloc"></span><span class="sur" id="s-pos"></span></div>
+    <div class="jauge"><i id="s-jauge"></i></div>
+  </div>
+  <div class="centre max" style="width:100%">
+    <div class="bloc-nom" id="s-phase"></div>
+    <div class="exo" id="s-exo"></div>
+    <div class="detail" id="s-detail"></div>
+    <div class="chrono" id="s-chrono">00:00</div>
+    <div class="suite" id="s-suite"></div>
+    <div class="duo" id="s-duo" style="display:none">
+      <button class="oui" id="s-oui">Réussi</button><button class="non" id="s-non">Échoué</button>
+    </div>
+  </div>
+  <div class="cmd max" style="width:100%">
+    <button id="s-prev">◀</button>
+    <button class="p" id="s-pause">Pause</button>
+    <button id="s-next">▶</button>
+  </div>
+</section>
+<section class="ecran" id="e-fin"><div class="max" id="c-fin"></div></section>
+<section class="ecran" id="e-prog"><div class="max" id="c-prog"></div></section>
+
+<script>
+"use strict";
+const $ = i => document.getElementById(i);
+
+/* ═════════ programme ═════════
+   8 semaines · 2 séances · compteur, jamais la date.
+   Volumes issus de la littérature : 3-6 séries de 10 s, repos 3:00.       */
+
+const DEBUT = new Date(2026, 8, 1);          // mardi 1er septembre 2026
+
+/* Toute charge est exprimée en total (corps + lest). On la traduit en
+   consigne concrète : lest au baudrier, ou valeur à lire sur la balance. */
+function dis(total){
+  const d = Math.round((total - S.poids)*4)/4;
+  if(Math.abs(d) < 0.5) return "poids de corps seul";
+  if(d > 0) return `+${d} kg au baudrier`;
+  return `${Math.round((S.poids + d)*10)/10} kg sur la balance`;
+}
+
+function echauffement(){
+  return [
+  ["Rotations épaules, poignets", "Cercles de bras, coudes, poignets. Amplitude progressive.", 120],
+  ["Pull-apart élastique",        "2×15 · bras tendus, omoplates serrées.", 90],
+  ["Rotation externe, coude au corps", "2×15 par bras · coude collé au flanc.", 120],
+  ["Face pull",                   "2×15 · coudes hauts, tirer vers le front.", 90],
+  ["Wrist curls",                 "2×15 · élastique sous les pieds, paumes vers le haut.", 90],
+  ["Reverse wrist curls",         "2×15 · paumes vers le bas, charge légère.", 90],
+  ["Tractions scapulaires",       "2×10 · coudes tendus, omoplates basses.", 90],
+  ["Tractions explosives",        "2×3 · intention maximale à la montée.", 120],
+  ["Hang 40 mm · partiel",        "3 × 10 s faciles. Aucun effort, pieds au sol si besoin.", 120],
+  ["Hang 20 mm · partiel",        `2 × 8 s · 50 % puis 75 % → ${dis(S.max*0.5)}, puis ${dis(S.max*0.75)}.`, 150]
+  ];
+}
+
+// charges MAW : +1,25 kg par semaine à partir de 87 % du max
+const MAW  = {1:7.5, 2:8.75, 3:10, 4:10};
+const MED  = {5:18, 6:17, 7:16};
+
+function planSemaine(sem, num){
+  // bloc trois doigts : charge calibrée une fois, réutilisée ensuite
+  const c3 = (phase) => {
+    if(phase === "MED"){
+      return S.med3
+        ? {charge:`${S.med3} mm · poids de corps seul`,
+           note:"Réglette calibrée la première fois. Trois doigts, main ouverte, pouce libre."}
+        : {charge:"à calibrer aujourd'hui",
+           note:"Prends la réglette où tu tiens 10 s à poids de corps avec 2 s de marge. Note-la en fin de séance, l'app la réutilisera."};
+    }
+    return S.charge3 !== null && S.charge3 !== undefined
+      ? {charge:dis(S.charge3),
+         note:"Charge calibrée la première fois. Index, majeur, annulaire, main ouverte, pouce libre."}
+      : {charge:"à calibrer aujourd'hui",
+         note:"Commence à poids de corps seul et ajuste jusqu'à 10 s dures avec 2 s de marge. Attends-toi à retirer du poids : trois doigts ouverts, c'est nettement moins fort que le half-crimp. Note ta charge en fin de séance."};
+  };
+
+  if(sem === 4) return {
+    phase:"Deload", titre:"Deload",
+    sous:"Volume divisé par deux, charge maintenue. C'est la semaine où tes poulies rattrapent ton système nerveux.",
+    blocs:[{nom:"Max hangs · half-crimp 20 mm", series:3, effort:10, repos:S.repos,
+            charge:`+${MAW[4]} kg au baudrier`, note:"Même charge que la semaine 3, moitié moins de séries."}]
+  };
+  if(sem === 8 && num === 1) return {
+    phase:"Test", titre:"Test max hang", test:true,
+    sous:"Réglette 20 mm, 10 s, repos 2:00, 8 essais maximum. Aujourd'hui tu ne fais que le test.",
+    blocs:[]
+  };
+  if(sem === 8) return {
+    phase:"Test", titre:"Séance légère",
+    sous:"Deux jours après le test. On entretient, on ne charge pas.",
+    blocs:[{nom:"Max hangs · half-crimp 20 mm", series:3, effort:10, repos:S.repos,
+            charge:dis(S.max*0.80),
+            note:"80 % de ton max. Confortable : aucune série ne doit être limite."}]
+  };
+  if(sem <= 3){
+    const c = `+${MAW[sem]} kg au baudrier`;
+    const t = c3("MAW");
+    return num === 1
+      ? {phase:"MAW", titre:"Séance 1 — half-crimp",
+         sous:"Réglette 20 mm, lest ajouté. Six séries.",
+         blocs:[{nom:"Max hangs · half-crimp 20 mm", series:6, effort:10, repos:S.repos, charge:c,
+                 note:"Dur sur les 2 dernières secondes, 2 s de marge avant l'échec."}]}
+      : {phase:"MAW", titre:"Séance 2 — deux prises",
+         sous:"Half-crimp puis trois doigts ouvert.",
+         blocs:[{nom:"Max hangs · half-crimp 20 mm", series:4, effort:10, repos:S.repos, charge:c,
+                 note:"Même charge que la séance 1."},
+                {nom:"Max hangs · 3 doigts ouvert", series:3, effort:10, repos:S.repos,
+                 charge:t.charge, note:t.note}]};
+  }
+  const mm = MED[sem];
+  const t = c3("MED");
+  return num === 1
+    ? {phase:"MED", titre:"Séance 1 — half-crimp",
+       sous:`Réglette ${mm} mm, poids de corps seul. Six séries.`,
+       blocs:[{nom:`Max hangs · half-crimp ${mm} mm`, series:6, effort:10, repos:S.repos,
+               charge:"poids de corps seul · aucun lest",
+               note:"Si les 6 séries passent proprement, descends d'un millimètre la prochaine fois."}]}
+    : {phase:"MED", titre:"Séance 2 — deux prises",
+       sous:`Réglette ${mm} mm puis trois doigts ouvert.`,
+       blocs:[{nom:`Max hangs · half-crimp ${mm} mm`, series:4, effort:10, repos:S.repos,
+               charge:"poids de corps seul · aucun lest",
+               note:"Position intacte du début à la fin."},
+              {nom:"Max hangs · 3 doigts ouvert", series:3, effort:10, repos:S.repos,
+               charge:t.charge, note:t.note}]};
+}
+
+/* ═════════ état ═════════ */
+const CLE = "maxhangs.v1";
+let S = Object.assign({sem:1, num:1, poids:75, max:95, repos:120, charge3:null, med3:null, hist:[], recs:{}}, charger());
+function charger(){ try{ return JSON.parse(localStorage.getItem(CLE)) || {}; }catch(e){ return {}; } }
+function sauver(){ try{ localStorage.setItem(CLE, JSON.stringify(S)); }catch(e){} }
+const fini = () => S.sem > 8;
+
+function dateTheorique(sem, num){
+  const d = new Date(DEBUT);
+  d.setDate(d.getDate() + (sem-1)*7 + (num === 1 ? 0 : 2));
+  return d.toLocaleDateString("fr-FR", {weekday:"long", day:"numeric", month:"long"});
+}
+
+/* ═════════ construction de la file ═════════ */
+let file = [], iP = 0, plan = null;
+let tempsFait = 0, theorique = 0, dernierTick = 0;
+
+function construire(){
+  plan = planSemaine(S.sem, S.num);
+  const f = [];
+  echauffement().forEach(([nom, det, sec]) =>
+    f.push({k:"effort", sec, exo:nom, det, bloc:"Échauffement"}));
+  plan.blocs.forEach(b => {
+    for(let i=1; i<=b.series; i++){
+      f.push({k:"pret", sec:5, exo:"En place", det:b.charge, bloc:b.nom});
+      f.push({k:"effort", sec:b.effort, exo:`Série ${i} / ${b.series}`, det:b.charge, bloc:b.nom});
+      if(i < b.series) f.push({k:"repos", sec:b.repos, exo:"Repos", det:b.note, bloc:b.nom});
+    }
+  });
+  file = f; iP = 0;
+  theorique = f.reduce((a,p) => a + p.sec, 0);
+  tempsFait = 0;
+}
+
+/* ═════════ accueil ═════════ */
+function accueil(){
+  montre("e-accueil");
+  const c = $("c-accueil");
+  if(fini()){
+    c.innerHTML = `<div class="sur">Cycle terminé</div><h1>8 semaines bouclées</h1>
+      <div class="sous">Prends une semaine légère, puis relance un cycle avec ton nouveau max.</div>
+      <button class="b1" id="revoir">Voir ma progression</button>
+      <button class="b2" id="relancer">Relancer un cycle</button>`;
+    $("revoir").onclick = progression;
+    $("relancer").onclick = () => { S.sem = 1; S.num = 1; sauver(); accueil(); };
+    return;
+  }
+  const p = planSemaine(S.sem, S.num);
+  const total = p.blocs.reduce((a,b)=>a+b.series,0);
+  const mins = Math.round((echauffement().reduce((a,x)=>a+x[2],0)
+    + p.blocs.reduce((a,b)=>a + b.series*(b.effort+5) + (b.series-1)*b.repos, 0))/60);
+
+  let g = "";
+  for(let i=1;i<=8;i++){
+    const e = i < S.sem ? "fait" : i === S.sem ? "cours" : (i===4?"deload":i===8?"test":"a");
+    g += `<button class="sem sj" data-s="${i}" data-e="${e}">${i}</button>`;
+  }
+
+  c.innerHTML = `<div class="sur">Semaine ${S.sem} sur 8 · phase ${p.phase}</div>
+    <h1>${p.titre}</h1>
+    <div class="sous">${p.sous}</div>
+    <div class="carte vif">
+      <div class="kv"><span class="k">Séance</span><span class="v gros">${S.num} / 2</span></div>
+      ${p.test ? `<div class="kv"><span class="k">Protocole</span><span class="v">8 essais max</span></div>`
+        : `<div class="kv"><span class="k">Séries de suspension</span><span class="v">${total}</span></div>
+           <div class="kv"><span class="k">Charge</span><span class="v">${p.blocs[0].charge}</span></div>`}
+      <div class="kv"><span class="k">Durée</span><span class="v">${p.test ? "~35" : mins} min</span></div>
+      <div class="kv"><span class="k">Date prévue</span><span class="v" style="font-size:13px">${dateTheorique(S.sem,S.num)}</span></div>
+    </div>
+    <div class="grille">${g}</div>
+    <div style="display:flex;gap:6px;margin-top:6px">
+      <button class="sn" data-n="1" style="flex:1;padding:11px;border-radius:9px;font-family:var(--m);font-size:12px;border:1px solid ${S.num===1?"var(--bois)":"var(--ligne)"};background:${S.num===1?"var(--bois)":"none"};color:${S.num===1?"#1A1206":"var(--faible)"}">Séance 1</button>
+      <button class="sn" data-n="2" style="flex:1;padding:11px;border-radius:9px;font-family:var(--m);font-size:12px;border:1px solid ${S.num===2?"var(--bois)":"var(--ligne)"};background:${S.num===2?"var(--bois)":"none"};color:${S.num===2?"#1A1206":"var(--faible)"}">Séance 2</button>
+    </div>
+    <div style="font-size:12px;color:var(--faible);text-align:center;margin-top:9px">Tape une semaine ou une séance pour t'y déplacer</div>
+    <div class="carte" style="padding:16px 20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:14px">
+        <div><div style="font-size:14px;font-weight:600">Repos entre les séries</div>
+          <div style="font-size:12px;color:var(--faible);margin-top:3px">2 min suffit si ta dernière série vaut la première</div></div>
+        <div style="display:flex;gap:5px;background:var(--nuit);padding:4px;border-radius:10px;flex:0 0 auto">
+          <button class="rp" data-v="120" style="border:0;padding:9px 13px;border-radius:7px;font-family:var(--m);font-size:13px;background:${S.repos===120?"var(--bois)":"none"};color:${S.repos===120?"#1A1206":"var(--faible)"}">2:00</button>
+          <button class="rp" data-v="180" style="border:0;padding:9px 13px;border-radius:7px;font-family:var(--m);font-size:13px;background:${S.repos===180?"var(--bois)":"none"};color:${S.repos===180?"#1A1206":"var(--faible)"}">3:00</button>
+        </div></div></div>
+    <button class="b1" id="go">${p.test ? "Démarrer le test" : "Démarrer la séance"}</button>
+    <div class="liens"><button id="l-prog">Progression</button></div>
+    <div class="note">Une fois lancée, la séance s'enchaîne toute seule. Bips sur les 3 dernières secondes de chaque phase. Pose le téléphone et ne le touche plus.<br><br>Le programme n'avance que si le chrono va jusqu'au bout.</div>`;
+
+  $("go").onclick = () => { debloquerSon(); p.test ? demarrerTest() : demarrerSeance(); };
+  c.querySelectorAll(".rp").forEach(b => b.onclick = () => {
+    S.repos = parseInt(b.dataset.v); sauver(); accueil();
+  });
+  c.querySelectorAll(".sj").forEach(b => b.onclick = () => {
+    S.sem = parseInt(b.dataset.s); sauver(); accueil();
+  });
+  c.querySelectorAll(".sn").forEach(b => b.onclick = () => {
+    S.num = parseInt(b.dataset.n); sauver(); accueil();
+  });
+  $("l-prog").onclick = progression;
+}
+
+function avancer(){
+  if(S.num === 1) S.num = 2; else { S.num = 1; S.sem++; }
+  sauver();
+}
+const montre = id => document.querySelectorAll(".ecran").forEach(e => e.classList.toggle("on", e.id===id));
+
+/* ═════════ séance ═════════ */
+let fin=0, reste=0, court=false, tic=null, dernier=-1;
+
+function demarrerSeance(){
+  construire();
+  montre("seance");
+  $("s-duo").style.display = "none";
+  lancerPhase();
+  eveil();
+}
+
+function lancerPhase(){
+  const p = file[iP];
+  reste = p.sec; dernier = -1; court = true;
+  fin = Date.now() + reste*1000;
+  dernierTick = Date.now();
+  clearInterval(tic); tic = setInterval(battre, 100);
+  peindre();
+}
+
+function peindre(){
+  const p = file[iP];
+  const s = $("seance");
+  s.dataset.k = p.k;
+  $("s-bloc").textContent = p.bloc;
+  $("s-pos").textContent = `${iP+1} / ${file.length}`;
+  $("s-phase").textContent = p.k === "effort" ? (p.bloc === "Échauffement" ? "Exercice" : "Suspension")
+                          : p.k === "repos" ? "Repos" : "Prêt";
+  $("s-exo").textContent = p.exo;
+  $("s-detail").textContent = p.det || "";
+  $("s-chrono").textContent = fmt(reste);
+  $("s-jauge").style.width = ((iP + (p.sec ? (p.sec-reste)/p.sec : 0)) / file.length * 100) + "%";
+  const n = file[iP+1];
+  $("s-suite").innerHTML = n ? `Ensuite · <b>${n.exo}</b>${n.k==="repos"?"":""}` : "Dernière phase";
+  $("s-pause").textContent = court ? "Pause" : "Reprendre";
+  $("s-prev").disabled = iP === 0;
+}
+
+function battre(){
+  const now = Date.now();
+  tempsFait += (now - dernierTick)/1000;
+  dernierTick = now;
+  reste = (fin - now)/1000;
+  const s = Math.ceil(reste);
+  if(s !== dernier && s > 0 && s <= 3){ dernier = s; bip(880, .07); }
+  if(reste <= 0){
+    clearInterval(tic); reste = 0;
+    if(iP >= file.length - 1){ bip(523,.5); terminer(); return; }
+    iP++;
+    bip(file[iP].k === "effort" ? 660 : file[iP].k === "pret" ? 784 : 392, .25);
+    lancerPhase(); return;
+  }
+  peindre();
+}
+
+function pause(){ court=false; clearInterval(tic); reste=Math.max(0,(fin-Date.now())/1000); peindre(); }
+function reprendre(){ court=true; fin=Date.now()+reste*1000; dernier=-1; dernierTick=Date.now();
+  clearInterval(tic); tic=setInterval(battre,100); peindre(); }
+$("s-pause").onclick = () => { if(mode==="test") return; court ? pause() : reprendre(); };
+$("s-next").onclick = () => { if(mode==="test"){ return; }
+  clearInterval(tic); if(iP >= file.length-1){ terminer(); return; } iP++; lancerPhase(); };
+$("s-prev").onclick = () => { if(mode==="test") return; clearInterval(tic); if(iP>0) iP--; lancerPhase(); };
+
+/* ═════════ test ═════════ */
+let mode="seance", essais=[], charge=0, etatTest="pret";
+const meilleurOk = () => { const r=essais.filter(e=>e.ok); return r.length?Math.max(...r.map(e=>e.charge)):null; };
+const pireEchec  = () => { const r=essais.filter(e=>!e.ok); return r.length?Math.min(...r.map(e=>e.charge)):null; };
+const encadre = () => { const a=meilleurOk(), b=pireEchec(); return a!==null && b!==null && (b-a)<=2.5; };
+function suivanteCharge(){
+  if(!essais.length) return 0;
+  const a=meilleurOk(), b=pireEchec();
+  if(a===null) return (b===null?0:b-5);
+  if(b===null) return essais[essais.length-1].charge + (essais.length<4?5:2.5);
+  const m = Math.round((a+(b-a)/2)/2.5)*2.5;
+  return m===a ? a+2.5 : m;
+}
+
+function demarrerTest(){
+  mode="test"; essais=[]; charge=0;
+  // échauffement d'abord, puis bascule en mode essais
+  plan = planSemaine(8,1);
+  file = echauffement().map(([nom,det,sec]) => ({k:"effort",sec,exo:nom,det,bloc:"Échauffement"}));
+  file.push({k:"repos", sec:120, exo:"Repos avant le test", det:"Prépare le lest et la balance", bloc:"Test"});
+  iP = 0;
+  montre("seance"); $("s-duo").style.display="none";
+  lancerPhase(); eveil();
+}
+
+function testEssai(){
+  etatTest = "pret";
+  $("seance").dataset.k = "pret";
+  $("s-bloc").textContent = "Test max hang";
+  $("s-pos").textContent = `Essai ${essais.length+1} / 8`;
+  $("s-phase").textContent = "Prêt";
+  $("s-exo").textContent = libelle(charge);
+  $("s-detail").textContent = "Mets-toi en place";
+  $("s-duo").style.display = "none";
+  $("s-suite").innerHTML = "Suspension de <b>10 s</b> après le décompte";
+  reste = 5; dernier = -1; court = true; fin = Date.now()+5000;
+  clearInterval(tic); tic = setInterval(battreTest, 100);
+  $("s-chrono").textContent = fmt(reste);
+}
+function battreTest(){
+  reste = (fin - Date.now())/1000;
+  const s = Math.ceil(reste);
+  if(s !== dernier && s > 0 && s <= 3){ dernier = s; bip(880,.07); }
+  $("s-chrono").textContent = fmt(reste);
+  if(reste <= 0){
+    clearInterval(tic);
+    if(etatTest === "pret"){
+      etatTest = "hang"; bip(660,.25);
+      $("seance").dataset.k="effort"; $("s-phase").textContent="Suspension";
+      $("s-exo").textContent="Tiens"; $("s-detail").textContent="Half-crimp · position intacte";
+      $("s-suite").innerHTML="";
+      reste=10; dernier=-1; fin=Date.now()+10000; tic=setInterval(battreTest,100);
+    } else if(etatTest === "hang"){
+      bip(523,.45); etatTest="verdict";
+      $("seance").dataset.k="pret"; $("s-phase").textContent="Verdict";
+      $("s-exo").textContent="10 s tenues ?"; $("s-chrono").textContent="00:00";
+      $("s-detail").textContent="Half-crimp maintenu du début à la fin ?";
+      $("s-duo").style.display="flex"; $("s-suite").innerHTML="";
+    } else {
+      bip(660,.25); testEssai();
+    }
+  }
+}
+$("s-oui").onclick = () => verdictTest(true);
+$("s-non").onclick = () => verdictTest(false);
+function verdictTest(ok){
+  essais.push({n:essais.length+1, charge, ok});
+  $("s-duo").style.display="none";
+  if(encadre() || essais.length >= 8){ terminer(); return; }
+  charge = suivanteCharge();
+  etatTest = "repos";
+  $("seance").dataset.k="repos"; $("s-phase").textContent="Repos";
+  $("s-exo").textContent="Prépare la charge"; $("s-detail").textContent=libelle(charge);
+  $("s-suite").innerHTML = `Essai suivant · <b>${libelle(charge)}</b>`;
+  reste=120; dernier=-1; court=true; fin=Date.now()+120000;
+  clearInterval(tic); tic=setInterval(battreTest,100);
+}
+const libelle = v => v===0 ? "Poids de corps" : v>0 ? `+${v} kg au baudrier` : `${S.poids+v} kg sur la balance`;
+
+/* ═════════ fin ═════════ */
+function terminer(){
+  clearInterval(tic); dormir(); montre("e-fin");
+  const c = $("c-fin");
+  if(mode === "test"){
+    const ok = essais.filter(e=>e.ok);
+    if(!ok.length){
+      c.innerHTML = `<div class="sur">Test</div><h1>Aucun essai réussi</h1>
+        <div class="note">Refais le test avec le pèse-personne sous la poutre et une charge négative.</div>
+        <button class="b1" id="ok">Retour</button>`;
+      $("ok").onclick = () => { mode="seance"; accueil(); }; return;
+    }
+    const best = Math.max(...ok.map(e=>e.charge)), max = S.poids+best;
+    const pct = Math.round(max/S.poids*1000)/10;
+    S.max = max; S.recs.max = {v:max, d:new Date().toLocaleDateString("fr-FR")};
+    S.hist.unshift({d:new Date().toISOString().slice(0,10), t:"Test max hang", sem:S.sem, v:max+" kg"});
+    sauver();
+    c.innerHTML = `<div class="sur">Test terminé</div><h1>${max} kg</h1>
+      <div class="sous">${S.poids} kg de corps ${best>0?"+"+best:best} kg · <b>${pct} %</b> du poids de corps</div>
+      <div class="carte"><table><thead><tr><th>Essai</th><th>Charge</th><th>Total</th><th></th></tr></thead><tbody>
+      ${essais.map(e=>`<tr data-r="${e.ok?1:0}"><td>${e.n}</td><td>${e.charge>0?"+":""}${e.charge} kg</td>
+        <td>${S.poids+e.charge} kg</td><td>${e.ok?"Réussi":"Échoué"}</td></tr>`).join("")}</tbody></table></div>
+      <div class="note"><b>Ta fourchette pour le prochain cycle : ${Math.round((max*0.85-S.poids)*10)/10} à ${Math.round((max*0.90-S.poids)*10)/10} kg de lest.</b></div>
+      <button class="b1" id="ok">Valider la séance</button>`;
+    $("ok").onclick = () => { mode="seance"; avancer(); accueil(); };
+    return;
+  }
+
+  const p = plan;
+  const pct = theorique ? Math.round(tempsFait/theorique*100) : 0;
+  const complete = pct >= 80;
+
+  if(!complete){
+    c.innerHTML = `<div class="sur">Semaine ${S.sem} · séance ${S.num}</div><h1>Séance incomplète</h1>
+      <div class="sous">${Math.round(tempsFait/60)} min sur les ${Math.round(theorique/60)} min prévues, soit ${pct} %.</div>
+      <div class="note stop">Cette séance <b>n'est pas enregistrée</b> et le programme n'avance pas. Tu la retrouveras telle quelle au prochain lancement.</div>
+      <button class="b1" id="ok">Retour</button>
+      <button class="b2" id="quand">L'enregistrer quand même</button>`;
+    $("ok").onclick = accueil;
+    $("quand").onclick = () => {
+      S.hist.unshift({d:new Date().toISOString().slice(0,10), t:p.titre, sem:S.sem, num:S.num, part:pct});
+      S.hist = S.hist.slice(0,120); avancer(); accueil();
+    };
+    return;
+  }
+
+  const troisDoigts = p.blocs.some(b => b.nom.includes("3 doigts"));
+  const enMed = p.phase === "MED";
+
+  c.innerHTML = `<div class="sur">Semaine ${S.sem} · séance ${S.num} · ${Math.round(tempsFait/60)} min</div>
+    <h1>Séance terminée</h1>
+    <div class="sous">${p.titre}</div>
+    <div class="carte">
+      <div class="champ"><label for="ch">Half-crimp — charge utilisée</label>
+        <div class="aide">${enMed ? "Profondeur de réglette en mm." : "Lest en kg. Négatif si tu as retiré du poids."}</div>
+        <div class="cin"><input id="ch" type="number" inputmode="decimal" step="0.25"
+          placeholder="${enMed ? MED[S.sem] : (MAW[S.sem]||"")}"><span class="u">${enMed?"mm":"kg"}</span></div></div>
+      ${troisDoigts ? `<div class="champ"><label for="c3">3 doigts ouvert — charge utilisée</label>
+        <div class="aide">${enMed ? "Profondeur de réglette en mm. L'app la réutilisera les prochaines fois."
+          : "Lest en kg, négatif si tu as retiré du poids (balance sous la poutre). L'app la réutilisera les prochaines fois."}</div>
+        <div class="cin"><input id="c3" type="number" inputmode="decimal" step="0.25"
+          placeholder="${enMed ? (S.med3||"") : (S.charge3!==null&&S.charge3!==undefined ? Math.round((S.charge3-S.poids)*4)/4 : "")}"><span class="u">${enMed?"mm":"kg"}</span></div></div>` : ""}
+      <div class="champ"><label for="se">Séries réussies proprement</label>
+        <div class="aide">Sur ${p.blocs.reduce((a,b)=>a+b.series,0)} séries. Une série où les doigts se sont ouverts ne compte pas.</div>
+        <div class="cin"><input id="se" type="number" inputmode="numeric" step="1"
+          placeholder="${p.blocs.reduce((a,b)=>a+b.series,0)}"><span class="u">/${p.blocs.reduce((a,b)=>a+b.series,0)}</span></div></div>
+    </div>
+    <button class="b1" id="ok">Enregistrer</button>
+    <button class="b2" id="skip">Enregistrer sans détail</button>`;
+  const enr = (avecDetail) => {
+    const e = {d:new Date().toISOString().slice(0,10), t:p.titre, sem:S.sem, num:S.num, ok:1};
+    if(avecDetail){
+      const v = parseFloat($("ch").value), r = parseInt($("se").value);
+      if(!isNaN(v)) e.v = v + (enMed?" mm":" kg");
+      if(!isNaN(r)) e.r = r;
+      if(!isNaN(v) && p.phase==="MAW"){
+        const rec = S.recs.lest;
+        if(!rec || v > rec.v){ S.recs.lest = {v, d:new Date().toLocaleDateString("fr-FR")}; }
+      }
+      if(troisDoigts){
+        const v3 = parseFloat($("c3").value);
+        if(!isNaN(v3)){ if(enMed) S.med3 = v3; else S.charge3 = S.poids + v3; }
+      }
+    }
+    S.hist.unshift(e); S.hist = S.hist.slice(0,120);
+    avancer(); accueil();
+  };
+  $("ok").onclick = () => enr(true);
+  $("skip").onclick = () => enr(false);
+}
+
+/* ═════════ progression ═════════ */
+function progression(){
+  montre("e-prog");
+  const c = $("c-prog");
+  const r = S.recs;
+  c.innerHTML = `<div class="sur">Suivi</div><h1>Progression</h1>
+    <div class="carte">
+      <div class="kv"><span class="k">Max sur 20 mm</span><span class="v gros">${r.max?r.max.v+" kg":"—"}</span></div>
+      <div class="kv"><span class="k">% du poids de corps</span><span class="v">${r.max?Math.round(r.max.v/S.poids*1000)/10+" %":"—"}</span></div>
+      <div class="kv"><span class="k">Meilleur lest</span><span class="v">${r.lest?"+"+r.lest.v+" kg":"—"}</span></div>
+      <div class="kv"><span class="k">Séances faites</span><span class="v">${S.hist.length}</span></div>
+    </div>
+    <div class="carte"><table><thead><tr><th>Date</th><th>Séance</th><th>Charge</th></tr></thead><tbody>
+      ${S.hist.slice(0,20).map(e=>`<tr><td>${e.d.slice(5)}</td><td style="font-family:var(--d);font-size:13px">S${e.sem}·${e.num||"T"}${e.part?" <span style=\"color:var(--stop)\">"+e.part+"%</span>":""}</td><td>${e.v||"—"}</td></tr>`).join("")
+        || `<tr><td colspan="3" style="color:var(--faible)">Aucune séance</td></tr>`}
+    </tbody></table></div>
+    <button class="b1" id="ret">Retour</button>
+    <button class="b2" id="exp">Exporter (JSON)</button>
+    <button class="b2" id="raz">Réinitialiser le cycle</button>
+    <div class="pied">Tes données restent sur ce téléphone. Exporte-les de temps en temps.</div>`;
+  $("ret").onclick = accueil;
+  $("exp").onclick = () => {
+    const b = new Blob([JSON.stringify(S,null,2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(b);
+    a.download = "maxhangs-"+new Date().toISOString().slice(0,10)+".json"; a.click();
+  };
+  $("raz").onclick = () => {
+    if(confirm("Effacer toute la progression et repartir de la semaine 1 ?")){
+      S = {sem:1, num:1, poids:75, max:95, repos:S.repos, charge3:null, med3:null, hist:[], recs:{}}; sauver(); accueil();
+    }
+  };
+}
+
+/* ═════════ son, écran ═════════ */
+let ctx = null;
+function debloquerSon(){ try{
+  ctx = ctx || new (window.AudioContext||window.webkitAudioContext)();
+  if(ctx.state === "suspended") ctx.resume();
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  g.gain.setValueAtTime(.0001, ctx.currentTime);
+  o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+.02);
+}catch(e){} }
+function bip(f, d){ try{
+  if(!ctx) return;
+  if(ctx.state === "suspended") ctx.resume();
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  o.type="sine"; o.frequency.value=f;
+  g.gain.setValueAtTime(.0001, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.35, ctx.currentTime+.01);
+  g.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime+d);
+  o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+d+.02);
+}catch(e){} }
+
+let wl = null;
+async function eveil(){ try{ if("wakeLock" in navigator && !wl){ wl = await navigator.wakeLock.request("screen");
+  wl.addEventListener("release", ()=>{ wl=null; }); } }catch(e){} }
+function dormir(){ try{ if(wl){ wl.release(); wl=null; } }catch(e){} }
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState === "visible" && court) eveil();
+});
+
+function fmt(s){ s = Math.max(0, Math.ceil(s));
+  return String(Math.floor(s/60)).padStart(2,"0")+":"+String(Math.floor(s%60)).padStart(2,"0"); }
+
+if("serviceWorker" in navigator)
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(()=>{}));
+
+accueil();
+</script>
+</body>
+</html>
